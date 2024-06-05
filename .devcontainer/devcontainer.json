@@ -1,0 +1,59 @@
+{
+  "name": "sbpaws",
+  "postAttachCommand": ".devcontainer/hooks/post_attach.sh",
+  "remoteUser": "dev",
+
+  "build": {
+    "dockerfile": "../docker/devcontainer/Dockerfile",
+    "context": ".."
+  },
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+        "editor.rulers": [88],
+        "editor.wordBasedSuggestions": "off",
+        "explorer.excludeGitIgnore": true,
+        "extensions.ignoreRecommendations": true,
+        "git.enableCommitSigning": true,
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.shellIntegration.decorationsEnabled": "never",
+
+        "editor.codeActionsOnSave": {
+          "source.fixAll": "explicit",
+          "source.organizeImports": "explicit"
+        },
+
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/usr/bin/bash"
+          }
+        },
+
+        "[python]": {
+          "diffEditor.ignoreTrimWhitespace": false,
+          "gitlens.codeLens.symbolScopes": ["!Module"]
+        }
+      },
+
+      "extensions": [
+        "charliermarsh.ruff",
+        "eamodio.gitlens",
+        "EditorConfig.EditorConfig",
+        "esbenp.prettier-vscode",
+        "jetmartin.bats",
+        "ms-azuretools.vscode-docker",
+        "ms-python.python",
+        "ms-vscode.makefile-tools"
+      ]
+    }
+  },
+
+  "mounts": [
+    "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock",
+    "type=bind,consistency=cached,source=${localWorkspaceFolder}/docker/devcontainer/volumes/history,target=/home/dev/.history",
+    "type=bind,consistency=cached,source=${localEnv:HOME}/.aws,target=/home/dev/.aws"
+  ]
+}

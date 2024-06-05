@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "sbpaws"
+version = "0.1.0"
+description = "A command line application to assist engineers manage credentials in an AWS landing zone."
+authors = ["Egon Braun <ebraun@schubergphilis.com>"]
+packages = [
+    { include = "src/**/*.py" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+boto3 = "^1.34.119"
+cement = {version="^3.0.10", extras=["alarm", "colorlog", "jinja2", "tabulate", "yaml"]}
+humanize = "^4.9.0"
+inflection = "^0.5.1"
+prompt-toolkit = "^3.0.46"
+requests = "^2.32.3"
+SQLAlchemy = "^2.0.30"
+yaspin = "^3.0.2"
+
+[tool.poetry.dev-dependencies]
+bandit = "^1.7.8"
+pre-commit = "^3.7.1"
+pre-commit-hooks = "^4.6.0"
+pytest = "^8.2.2"
+ruff = "^0.4.7"
+
+[tool.poetry.scripts]
+sbpaws = "src.commands.sbpaws.app:run"
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+tests = []
+skips = []
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

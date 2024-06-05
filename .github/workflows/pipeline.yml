@@ -1,0 +1,62 @@
+name: Pipeline
+
+on:
+  pull_request:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare
+        uses: schubergphilis/action-prepare@v1
+        with:
+          type: python
+          job: lint
+
+      - name: Lint
+        run: |
+          make lint
+
+  scan:
+    name: Scan
+    runs-on: ubuntu-22.04
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare
+        uses: schubergphilis/action-prepare@v1
+        with:
+          type: python
+          job: scan
+
+      - name: Scan
+        run: |
+          make scan
+
+  ci:
+    name: CI
+    runs-on: ubuntu-22.04
+    needs: scan
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare
+        uses: schubergphilis/action-prepare@v1
+        with:
+          type: python
+          job: ci
+
+      - name: Test
+        run: |
+          make test
