@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "grawsp"
-version = "0.1.0"
+version = "1.0.0"
 description = "Grawsp is a command line application to manage credentials in AWS STS/SSO enabled landing zone."
 authors = ["Egon Braun <ebraun@schubergphilis.com>"]
 packages = [
