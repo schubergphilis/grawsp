@@ -1,6 +1,7 @@
 SHELL := /bin/bash
 
 ROOT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+DIST_DIR := $(abspath ${ROOT_DIR}/dist)
 SOURCE_DIR := $(abspath ${ROOT_DIR}/src)
 TESTS_DIR := $(abspath ${ROOT_DIR}/tests)
 
@@ -15,6 +16,9 @@ PROJECT_VERSION ?= $(strip \
 	) \
 )
 
+PYPI_UPLOAD_USERNAME ?=
+PYPI_UPLOAD_PASSWORD ?=
+
 .PHONY: all
 all: lint scan build test
 
@@ -24,7 +28,9 @@ build:
 
 .PHONY: clean
 clean:
-	rm -f "$(ROOT_DIR)/.ruff_cache"
+	@rm -rf "$(ROOT_DIR)/.ruff_cache"
+	@find "$(ROOT_DIR)" -type d -name "__pycache__" -exec rm -rf {} +
+	@rm -f "$(DIST_DIR)"/*
 
 .PHONY: env
 env:
@@ -36,7 +42,9 @@ lint:
 
 .PHONY: release
 release:
-	@echo "Not yet implemented."
+	@poetry publish \
+		-u "$(PYPI_UPLOAD_USERNAME)" \
+		-p "$(PYPI_UPLOAD_PASSWORD)"
 
 .PHONY: scan
 scan:
