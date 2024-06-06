@@ -1,19 +1,17 @@
 target-version = "py310"
 
 [lint]
+ignore = [
+    "E501", # Line too long
+]
+
 select = [
-    # pycodestyle
-    "E",
-    # pyflakes
-    "F",
-    # pyupgrade
-    "UP",
-    # flake8-bugbear
-    "B",
-    # flake8-simplify
-    "SIM",
-    # isort
-    "I",
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "I",    # isort
 ]
 
 [format]
