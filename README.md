@@ -19,8 +19,10 @@ zone.
 
 ## Requirements
 
-- Linux or macOS. Windows support only through WSL
+- Linux or macOS (*)
 - Python 3.10+
+
+(*) Windows support only through WSL
 
 ## Installing
 
