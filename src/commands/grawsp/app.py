@@ -24,7 +24,7 @@ class GrawspApp(App):
         output_handler = "tabulate"
 
         config_files = [
-            f"~/.config/toolbelt/{APP_NAME}.conf",
+            f"~/.config/{APP_NAME}/{APP_NAME}.conf",
         ]
 
         extensions = [

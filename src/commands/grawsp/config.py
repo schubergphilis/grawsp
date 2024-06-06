@@ -32,7 +32,7 @@ DEFAULT_CONFIG["aws"]["default_region"] = DEFAULT_AWS_REGION
 #
 
 DEFAULT_CONFIG["database"]["path"] = (
-    Path(f"~/.local/share/toolbelt/{APP_NAME}.db").expanduser().absolute().as_posix()
+    Path(f"~/.local/share/{APP_NAME}/{APP_NAME}.db").expanduser().absolute().as_posix()
 )
 
 #
