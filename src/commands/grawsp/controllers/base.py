@@ -8,7 +8,7 @@ from ....util.terminal.spinner import Spinner
 from ..actions.aws import create_authorization
 from ..constants import APP_NAME
 from ..database.models import Authorization, Realm
-from ..exceptions import RuntimeSbpAwsAppError
+from ..exceptions import RuntimeAppError
 
 
 class BaseController(Controller):
@@ -64,17 +64,17 @@ class BaseController(Controller):
 
             if not realm_name:
                 spinner.error("No AWS realm provided")
-                raise RuntimeSbpAwsAppError()
+                raise RuntimeAppError()
 
             if not self.app.config.has_section(realm_name):
                 spinner.error("No AWS realm configuration found")
-                raise RuntimeSbpAwsAppError()
+                raise RuntimeAppError()
 
             start_url = self.app.config.get(realm_name, "start_url")
 
             if not start_url:
                 spinner.error("No SSO start url was found")
-                raise RuntimeSbpAwsAppError()
+                raise RuntimeAppError()
 
             client_name = APP_NAME
             database_engine = self.app.database_engine
@@ -101,7 +101,7 @@ class BaseController(Controller):
                 )
             except Exception as e:
                 spinner.error("Could not authorize to AWS", submessage=str(e))
-                raise RuntimeSbpAwsAppError("Could not authorize to AWS") from e
+                raise RuntimeAppError("Could not authorize to AWS") from e
             else:
                 spinner.success("Authorized to AWS")
 

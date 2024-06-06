@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "sbpaws"
+name = "grawsp"
 version = "0.1.0"
-description = "A command line application to assist engineers manage credentials in an AWS landing zone."
+description = "Grawsp is a command line application to manage credentials in AWS STS/SSO enabled landing zone."
 authors = ["Egon Braun <ebraun@schubergphilis.com>"]
 packages = [
     { include = "src/**/*.py" }
@@ -26,7 +26,7 @@ pytest = "^8.2.2"
 ruff = "^0.4.7"
 
 [tool.poetry.scripts]
-sbpaws = "src.commands.sbpaws.app:run"
+grawsp = "src.commands.grawsp.app:run"
 
 [tool.bandit]
 exclude_dirs = ["tests"]

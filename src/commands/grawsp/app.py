@@ -8,7 +8,7 @@ from .controllers.account import AccountController
 from .controllers.base import BaseController
 from .controllers.console import ConsoleController
 from .controllers.credential import CredentialController
-from .exceptions import SbpAwsAppError
+from .exceptions import AppError
 from .hooks import database_hook
 
 #
@@ -16,7 +16,7 @@ from .hooks import database_hook
 #
 
 
-class SbpAwsApp(App):
+class GrawspApp(App):
     class Meta:
         config_defaults = DEFAULT_CONFIG
         label = APP_NAME
@@ -54,10 +54,10 @@ class SbpAwsApp(App):
 
 
 def run() -> None:
-    with SbpAwsApp() as app:
+    with GrawspApp() as app:
         try:
             app.run()
-        except SbpAwsAppError as e:
+        except AppError as e:
             if app.debug:
                 print("")
                 traceback.print_exception(e)

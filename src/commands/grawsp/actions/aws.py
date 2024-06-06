@@ -24,9 +24,9 @@ from ..defaults import (
     DEFAULT_TIMEOUT_IN_SECONDS,
 )
 from ..exceptions import (
-    NotFoundSbpAwsAppError,
-    RuntimeSbpAwsAppError,
-    TimeoutSbpAwsAppError,
+    NotFoundAppError,
+    RuntimeAppError,
+    TimeoutReachedAppError,
 )
 
 
@@ -54,12 +54,12 @@ def create_credential(
         authorization = find_authorization(database_engine, realm_name, region)
 
         if not authorization:
-            raise NotFoundSbpAwsAppError("Authorization not found")
+            raise NotFoundAppError("Authorization not found")
 
         account = find_account_by_name(database_engine, realm_name, account_name)
 
         if not account:
-            raise NotFoundSbpAwsAppError(f"Account {account_name} was not found")
+            raise NotFoundAppError(f"Account {account_name} was not found")
 
         is_sso = (
             session.query(SsoRole)
@@ -77,7 +77,7 @@ def create_credential(
             )
         else:
             if not intermediary_role_name:
-                raise RuntimeSbpAwsAppError("An intermediary role was not provided")
+                raise RuntimeAppError("An intermediary role was not provided")
 
             intermediary_creds = create_credential(
                 database_engine,
@@ -190,7 +190,7 @@ def create_authorization(
                     elapsed_time = datetime.now() - start_time
 
                     if elapsed_time >= timedelta(seconds=timeout):
-                        raise TimeoutSbpAwsAppError(
+                        raise TimeoutReachedAppError(
                             "Authorization was not approved by the user"
                         ) from e
 
@@ -296,7 +296,7 @@ def find_credential(
     account = find_account_by_name(database_engine, realm_name, account_name)
 
     if not account:
-        raise NotFoundSbpAwsAppError(f"Account {account_name} was not found")
+        raise NotFoundAppError(f"Account {account_name} was not found")
 
     with Session(database_engine) as session:
         credential = (

@@ -17,7 +17,7 @@ from ..actions.aws import (
 from ..constants import APP_NAME
 from ..database.models import SsoRole
 from ..defaults import DEFAULT_TIMEOUT_IN_SECONDS
-from ..exceptions import RuntimeSbpAwsAppError
+from ..exceptions import RuntimeAppError
 
 
 class ConsoleController(Controller):
@@ -115,7 +115,7 @@ class ConsoleController(Controller):
 
                 if not role_name:
                     spinner.error("AWS role could not be determined")
-                    raise RuntimeSbpAwsAppError()
+                    raise RuntimeAppError()
 
                 spinner.info(f"Using {role_name} role")
 
@@ -142,7 +142,7 @@ class ConsoleController(Controller):
 
                     if not intermediary_role_name:
                         spinner.error("Intermediary role could not be determined")
-                        raise RuntimeSbpAwsAppError()
+                        raise RuntimeAppError()
 
                     spinner.info(
                         f"Using {intermediary_role_name} as an intermediary role"
@@ -170,7 +170,7 @@ class ConsoleController(Controller):
                     )
                 except Exception as e:
                     spinner.error("Could not generate console URL", submessage=str(e))
-                    raise RuntimeSbpAwsAppError() from e
+                    raise RuntimeAppError() from e
 
                 encoded_console_url = urllib.parse.quote(console_url)
                 tab_color = "blue"

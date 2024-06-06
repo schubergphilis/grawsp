@@ -1,5 +1,5 @@
 {
-  "name": "sbpaws",
+  "name": "grawsp",
   "postAttachCommand": ".devcontainer/hooks/post_attach.sh",
   "remoteUser": "dev",
 

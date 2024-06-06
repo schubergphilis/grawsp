@@ -1,6 +1,6 @@
-from src.commands.sbpaws.app import SbpAwsApp
+from src.commands.grawsp.app import GrawspApp
 
 
 def test_if_we_can_create_app_instance():
-    app = SbpAwsApp()
+    app = GrawspApp()
     assert app is not None

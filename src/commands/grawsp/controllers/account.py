@@ -17,7 +17,7 @@ from ..actions.aws import (
 )
 from ..constants import APP_NAME
 from ..database.models import Account, Realm, SsoRole
-from ..exceptions import RuntimeSbpAwsAppError
+from ..exceptions import RuntimeAppError
 
 
 class AccountController(Controller):
@@ -66,11 +66,11 @@ class AccountController(Controller):
         with Spinner("Accessing AWS Account") as spinner:
             if not realm_name:
                 spinner.error("No AWS realm provided")
-                raise RuntimeSbpAwsAppError()
+                raise RuntimeAppError()
 
             if not self.app.config.has_section(realm_name):
                 spinner.error("No AWS realm configuration found")
-                raise RuntimeSbpAwsAppError()
+                raise RuntimeAppError()
 
             spinner.info(f"Using {realm_name} realm")
 
@@ -113,7 +113,7 @@ class AccountController(Controller):
 
                 if not role_name:
                     spinner.error("AWS role could not be determined")
-                    raise RuntimeSbpAwsAppError()
+                    raise RuntimeAppError()
 
                 spinner.info(f"Using {role_name} role")
 
@@ -140,7 +140,7 @@ class AccountController(Controller):
 
                     if not intermediary_role_name:
                         spinner.error("Intermediary role could not be determined")
-                        raise RuntimeSbpAwsAppError()
+                        raise RuntimeAppError()
 
                     spinner.info(
                         f"Using {intermediary_role_name} as an intermediary role"
@@ -158,7 +158,7 @@ class AccountController(Controller):
                     )
                 except RuntimeError as e:
                     spinner.error(f"{e}")
-                    raise RuntimeSbpAwsAppError() from e
+                    raise RuntimeAppError() from e
 
                 spinner.info(
                     f"Authorized to {account.name} account as {role_name} role"
@@ -247,7 +247,7 @@ class AccountController(Controller):
 
             if not realm_name:
                 spinner.error("No AWS realm provided")
-                raise RuntimeSbpAwsAppError()
+                raise RuntimeAppError()
 
             realm = find_realm(
                 database_engine=database_engine,
@@ -256,7 +256,7 @@ class AccountController(Controller):
 
             if not realm:
                 spinner.error(f"Could not find realm {realm_name}")
-                raise RuntimeSbpAwsAppError()
+                raise RuntimeAppError()
 
             region = self.app.pargs.region or self.app.config.get(
                 "aws", "default_region"
@@ -274,7 +274,7 @@ class AccountController(Controller):
                 spinner.error(
                     f"You are not authorized to realm {realm_name} in {region} region"
                 )
-                raise RuntimeSbpAwsAppError()
+                raise RuntimeAppError()
 
             spinner.info("Authorized to AWS")
 
@@ -286,7 +286,7 @@ class AccountController(Controller):
                     )
                 except Exception as e:
                     spinner.error("Could not synchronize accounts", submessage=str(e))
-                    raise RuntimeSbpAwsAppError() from e
+                    raise RuntimeAppError() from e
                 else:
                     session.execute(
                         delete(Account).where(Account.authorization == authorization)
