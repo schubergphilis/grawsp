@@ -47,7 +47,7 @@ def assume_role(
             "session_token": response["Credentials"]["SessionToken"],
         }
     except KeyError as e:
-        raise RuntimeError(f"Could not assume role '{role_name}', reason: {e}")
+        raise RuntimeError(f"Could not assume role '{role_name}', reason: {e}") from e
 
 
 def get_console_url(
@@ -55,6 +55,7 @@ def get_console_url(
     secret_access_key: str,
     session_token: str,
     region: str = "",
+    timeout: int = 10,
 ) -> str:
     session_data = {
         "sessionId": access_key_id,
@@ -66,6 +67,7 @@ def get_console_url(
 
     response = requests.get(
         federated_signin_endpoint,
+        timeout=timeout,
         params={
             "Action": "getSigninToken",
             "Session": json.dumps(session_data),

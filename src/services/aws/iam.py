@@ -32,4 +32,4 @@ def find_role_by_name(
         if e.response["Error"]["Code"] == "NoSuchEntity":
             return None
     except KeyError as e:
-        raise RuntimeError(f"Could not find role '{role_name}', reason: {e}")
+        raise RuntimeError(f"Could not find role '{role_name}', reason: {e}") from e

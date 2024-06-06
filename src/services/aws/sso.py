@@ -34,7 +34,7 @@ def authorize_device(
             "verfication_url": response["verificationUriComplete"],
         }
     except KeyError as e:
-        raise RuntimeError(f"Could not authorize device, reason: {e}")
+        raise RuntimeError(f"Could not authorize device, reason: {e}") from e
 
 
 def create_access_token(
@@ -61,7 +61,7 @@ def create_access_token(
             ).timestamp(),
         }
     except KeyError as e:
-        raise RuntimeError(f"Could not create token, reason: {e}")
+        raise RuntimeError(f"Could not create token, reason: {e}") from e
 
 
 def list_sso_accounts(
@@ -94,7 +94,9 @@ def list_sso_accounts(
                         }
                     )
                 except KeyError as e:
-                    raise RuntimeError(f"Could not retrieve accounts, reason: {e}")
+                    raise RuntimeError(
+                        f"Could not retrieve accounts, reason: {e}"
+                    ) from e
 
         if "nextToken" in response:
             next_token = response["nextToken"]
@@ -146,10 +148,12 @@ def list_sso_roles(
             break
 
         for role in response["roleList"]:
-            if "roleName" in role.keys():
+            if "roleName" in role:
                 roles.append(role["roleName"])
 
-        next_token = response["nextToken"] if "nextToken" in response else None
+        next_token = (
+            response.get("nextToken", None) if "nextToken" in response else None
+        )
 
         if not next_token:
             break
@@ -173,7 +177,7 @@ def register_client(name: str, region: str) -> dict[str, Any]:
             "client_secret_expires_at": response["clientSecretExpiresAt"],
         }
     except KeyError as e:
-        raise RuntimeError(f"Could not register client '{name}', reason: {e}")
+        raise RuntimeError(f"Could not register client '{name}', reason: {e}") from e
 
 
 def assume_sso_role(
@@ -203,4 +207,4 @@ def assume_sso_role(
     except KeyError as e:
         raise RuntimeError(
             f"Could not assume role '{role_name}' in account '{account_id}', reason: {e}"
-        )
+        ) from e

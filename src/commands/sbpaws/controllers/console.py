@@ -16,6 +16,7 @@ from ..actions.aws import (
 )
 from ..constants import APP_NAME
 from ..database.models import SsoRole
+from ..defaults import DEFAULT_TIMEOUT_IN_SECONDS
 from ..exceptions import RuntimeSbpAwsAppError
 
 
@@ -165,6 +166,7 @@ class ConsoleController(Controller):
                         secret_access_key=credential.secret_access_key,
                         session_token=credential.session_token,
                         region=region,
+                        timeout=DEFAULT_TIMEOUT_IN_SECONDS,
                     )
                 except Exception as e:
                     spinner.error("Could not generate console URL", submessage=str(e))

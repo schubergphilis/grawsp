@@ -192,7 +192,7 @@ def create_authorization(
                     if elapsed_time >= timedelta(seconds=timeout):
                         raise TimeoutSbpAwsAppError(
                             "Authorization was not approved by the user"
-                        )
+                        ) from e
 
                     sleep(retry_after)
                 else:
