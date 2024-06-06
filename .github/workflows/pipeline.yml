@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Prepare
-        uses: schubergphilis/action-prepare@v1
+        uses: schubergphilis/prepare-action@v1
         with:
           type: python
           job: lint
@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Prepare
-        uses: schubergphilis/action-prepare@v1
+        uses: schubergphilis/prepare-action@v1
         with:
           type: python
           job: scan
@@ -52,7 +52,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Prepare
-        uses: schubergphilis/action-prepare@v1
+        uses: schubergphilis/prepare-action@v1
         with:
           type: python
           job: ci
@@ -77,7 +77,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Prepare
-        uses: schubergphilis/action-prepare@v1
+        uses: schubergphilis/prepare-action@v1
         with:
           type: python
           job: cd
