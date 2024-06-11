@@ -2,8 +2,7 @@ import configparser
 from datetime import datetime
 from pathlib import Path
 
-import humanize
-from cement import Controller, ex
+from cement import Controller
 from inflection import dasherize
 from sqlalchemy.orm import Session
 
@@ -11,16 +10,13 @@ from ....util.terminal.spinner import Spinner
 from ..database.models import Credential
 
 
-class CredentialController(Controller):
+class ExportController(Controller):
     class Meta:
-        label = "credential"
-        aliases = ["credentials", "creds"]
+        label = "export"
         stacked_on = "base"
         stacked_type = "nested"
 
-    @ex(
-        help="Configure AWS cli credentials file.",
-        arguments=[
+        arguments = [
             (
                 ["--default-account"],
                 {
@@ -48,9 +44,9 @@ class CredentialController(Controller):
                     "type": str,
                 },
             ),
-        ],
-    )
-    def configure(self) -> None:
+        ]
+
+    def _default(self) -> None:
         credentials_file_path = Path(
             self.app.pargs.credentials_file_path
             or self.app.config.get("aws", "credentials_path")
@@ -113,54 +109,3 @@ class CredentialController(Controller):
                 credentials_parser.write(fd)
 
             spinner.success("Credentials file was configured")
-
-    @ex(
-        help="List all the valid credentials available.",
-        arguments=[
-            (
-                ["--expired"],
-                {
-                    "action": "store_true",
-                    "default": False,
-                    "dest": "show_expired",
-                    "help": "Include expired credentials in the output",
-                },
-            ),
-        ],
-    )
-    def list(self) -> None:
-        database_engine = self.app.database_engine
-        show_expired = self.app.pargs.show_expired
-        table_data = []
-
-        with Session(database_engine) as session:
-            credentials = session.query(Credential).all()
-
-            for credential in credentials:
-                if credential.is_expired() and not show_expired:
-                    continue
-
-                table_data.append(
-                    [
-                        credential.account.name,
-                        credential.role_name,
-                        credential.access_key_id,
-                        humanize.naturaltime(
-                            datetime.fromtimestamp(credential.expires_at),
-                        ),
-                    ],
-                )
-
-            if len(table_data) <= 0:
-                self.app.log.warning("No credentials found.")
-                return
-
-            self.app.render(
-                table_data,
-                headers=[
-                    "Account Name",
-                    "Role",
-                    "Access Key ID",
-                    "Expires In",
-                ],
-            )

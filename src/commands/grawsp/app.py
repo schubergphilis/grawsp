@@ -4,10 +4,12 @@ from cement import App
 
 from .config import DEFAULT_CONFIG
 from .constants import APP_NAME
-from .controllers.account import AccountController
+from .controllers.auth import AuthController
 from .controllers.base import BaseController
-from .controllers.console import ConsoleController
-from .controllers.credential import CredentialController
+from .controllers.export import ExportController
+from .controllers.list import ListController
+from .controllers.open_console import OpenConsoleController
+from .controllers.sync import SyncController
 from .exceptions import AppError
 from .hooks import database_hook
 
@@ -28,19 +30,17 @@ class GrawspApp(App):
         ]
 
         extensions = [
-            "alarm",
             "colorlog",
-            "jinja2",
-            "json",
             "tabulate",
-            "yaml",
         ]
 
         handlers = [
             BaseController,
-            AccountController,
-            ConsoleController,
-            CredentialController,
+            AuthController,
+            ExportController,
+            ListController,
+            OpenConsoleController,
+            SyncController,
         ]
 
         hooks = [
