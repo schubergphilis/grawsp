@@ -75,37 +75,37 @@ First you need to register your device and authenticate yourself:
 
 ```bash
 grawsp auth # will open your default browser to follow the SSO-OIDC process
-grawsp status
 ```
 
 Then you need to synchronise the list of AWS accounts available to you:
 
 ```bash
-grawsp accounts sync
-grawsp accounts list
+grawsp sync
+grawsp list accounts
 ```
 
 Now you can also get credentials for a role in an account:
 
 ```bash
-grawsp account authorize 012345678910
-grawsp account authorize my-account-name
-grawsp account authorize "my.*-dev"
-grawsp account authorize --role ReadOnly "my.*-dev"
-grawsp creds list
+grawsp auth 012345678910
+grawsp auth my-account-dev
+grawsp auth "my.*-dev"
+grawsp auth --role ReadOnly "my.*-dev"
+grawsp auth --role Admin --from-role Operator "my.*-dev"
+grawsp list creds
 ```
 
 If you need to open the web console(*):
 
 ```bash
-grawsp console open "my.*-dev"
-grawsp console open --role AdminRole my-account-dev
+grawsp open-console "my.*-dev"
+grawsp open-console --role AdminRole --region ap-south-2 my-account-dev
 ```
 
 If you want to export your credentials to use in the [AWS Command Line Interface](https://aws.amazon.com/cli/):
 
 ```bash
-grawsp creds configure --default-account my-account-dev --default-role ReadOnly
+grawsp export --default-account my-account-dev --default-role ReadOnly
 ```
 
 (*) This will use Firefox and not your default browser
