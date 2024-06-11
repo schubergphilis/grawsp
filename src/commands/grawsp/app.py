@@ -4,6 +4,7 @@ from cement import App
 
 from .config import DEFAULT_CONFIG
 from .constants import APP_NAME
+from .controllers.about import AboutController
 from .controllers.auth import AuthController
 from .controllers.base import BaseController
 from .controllers.export import ExportController
@@ -36,6 +37,7 @@ class GrawspApp(App):
 
         handlers = [
             BaseController,
+            AboutController,
             AuthController,
             ExportController,
             ListController,
