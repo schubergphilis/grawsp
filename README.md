@@ -38,6 +38,13 @@ pip install grawsp
 pipx install grawsp
 ```
 
+... or using [Homebrew](https://brew.sh/):
+
+```bash
+brew tap schubergphilis/core
+brew install grawsp
+```
+
 Make sure you have the `~/.local/bin` directory in your `$PATH` and that should be
 enough for you to be able to use `grawsp`.
 
