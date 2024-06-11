@@ -124,7 +124,6 @@ class ListController(Controller):
                 table_data,
                 headers=[
                     "Realm",
-                    "Region",
                     "Client ID",
                     "Expires In",
                 ],

@@ -13,13 +13,5 @@ class BaseController(Controller):
                     "default": "",
                     "dest": "realm",
                 },
-            ),
-            (
-                ["--region"],
-                {
-                    "help": "Which AWS region to use",
-                    "default": "",
-                    "dest": "region",
-                },
-            ),
+            )
         ]
