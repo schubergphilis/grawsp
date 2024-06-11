@@ -1,14 +1,12 @@
 import re
-import urllib
-import webbrowser
 
-from cement import Controller, ex
+from cement import Controller
 from inflection import transliterate
 from sqlalchemy.orm import Session
 
-from ....services.aws.sts import get_console_url
 from ....util.terminal.spinner import Spinner
 from ..actions.aws import (
+    create_authorization,
     create_credential,
     find_account_by_name,
     find_account_by_number,
@@ -16,53 +14,75 @@ from ..actions.aws import (
 )
 from ..constants import APP_NAME
 from ..database.models import SsoRole
-from ..defaults import DEFAULT_TIMEOUT_IN_SECONDS
 from ..exceptions import RuntimeAppError
 
 
-class ConsoleController(Controller):
+class AuthController(Controller):
     class Meta:
-        label = "console"
+        label = "auth"
         stacked_on = "base"
         stacked_type = "nested"
 
-    @ex(
-        help="Open web console using a specific role",
-        arguments=[
+        arguments = [
             (
-                ["--region"],
+                ["--from-role"],
                 {
                     "default": "",
-                    "help": "The name of the region you want the console to be opened with.",
-                    "dest": "region",
+                    "help": "The name of the intermediary role to be assumed before.",
+                    "dest": "from_role_name",
                     "type": str,
+                },
+            ),
+            (
+                ["--retry-after"],
+                {
+                    "help": "How long to wait until next AWS authorization API check",
+                    "default": "",
+                    "dest": "retry_after",
                 },
             ),
             (
                 ["--role"],
                 {
                     "default": "",
-                    "help": "The name of the role you want to use.",
+                    "help": "The name of the role you want to assume.",
                     "dest": "role_name",
                     "type": str,
+                },
+            ),
+            (
+                ["--timeout"],
+                {
+                    "help": "How long to wait until we abort the authorization process",
+                    "default": "",
+                    "dest": "timeout",
                 },
             ),
             (
                 ["identifier"],
                 {
                     "help": "The ID, name or regular expression identifying the account(s).",
+                    "nargs": "?",
                 },
             ),
-        ],
-    )
-    def open(self) -> None:
-        browser_name = "firefox-custom"
+        ]
+
+    def _default(self) -> None:
         database_engine = self.app.database_engine
-        firefox_path = self.app.config.get("general", "firefox_path")
-        identifier = self.app.pargs.identifier
+        from_role_name = self.app.pargs.from_role_name
+        intermediary_role_name = ""
         realm_name = self.app.pargs.realm or self.app.config.get("aws", "default_realm")
-        region = self.app.pargs.region or self.app.config.get("aws", "default_region")
+        region = self.app.config.get("aws", "default_region")
         role_name = self.app.pargs.role_name
+
+        retry_after = int(
+            self.app.pargs.retry_after or self.app.config.get("general", "retry_after")
+        )
+
+        timeout = int(
+            self.app.pargs.timeout or self.app.config.get("general", "timeout")
+        )
+
         user_name = transliterate(
             re.sub(
                 r"\s+",
@@ -72,7 +92,45 @@ class ConsoleController(Controller):
             ),
         )
 
-        with Spinner("Opening AWS console(s)") as spinner:
+        with Spinner("Accessing AWS Account") as spinner:
+            if not realm_name:
+                spinner.error("No AWS realm provided")
+                raise RuntimeAppError()
+
+            if not self.app.config.has_section(realm_name):
+                spinner.error("No AWS realm configuration found")
+                raise RuntimeAppError()
+
+            start_url = self.app.config.get(realm_name, "start_url")
+
+            if not start_url:
+                spinner.error("No SSO start url was found")
+                raise RuntimeAppError()
+
+            client_name = APP_NAME
+            spinner.info(f"Using {realm_name} realm")
+
+            try:
+                _ = create_authorization(
+                    client_name=client_name,
+                    database_engine=database_engine,
+                    realm_name=realm_name,
+                    region=region,
+                    retry_after=retry_after,
+                    start_url=start_url,
+                    timeout=timeout,
+                )
+            except Exception as e:
+                spinner.error("Could not authorize to AWS", submessage=str(e))
+                raise RuntimeAppError("Could not authorize to AWS") from e
+            else:
+                spinner.success("Authorized to AWS")
+
+            identifier = self.app.pargs.identifier
+
+            if not identifier:
+                return
+
             accounts = []
 
             if identifier.isdigit():
@@ -94,13 +152,9 @@ class ConsoleController(Controller):
                     database_engine, realm_name, pattern=identifier
                 )
 
-            if len(accounts) <= 0:
-                spinner.warning("Identifier matched no accounts")
-                return
+            spinner.info(f"Identifier matched {len(accounts)} accounts")
 
-            webbrowser.register(
-                browser_name, None, webbrowser.GenericBrowser([firefox_path, "%s"])
-            )
+            session_name = f"{client_name}-{user_name}"
 
             for account in accounts:
                 if not role_name and self.app.config.has_option(
@@ -140,6 +194,9 @@ class ConsoleController(Controller):
                             realm_name, "default_role"
                         )
 
+                    if from_role_name:
+                        intermediary_role_name = from_role_name
+
                     if not intermediary_role_name:
                         spinner.error("Intermediary role could not be determined")
                         raise RuntimeAppError()
@@ -148,37 +205,20 @@ class ConsoleController(Controller):
                         f"Using {intermediary_role_name} as an intermediary role"
                     )
 
-                session_name = f"{APP_NAME}-{user_name}-{role_name}"
-
-                credential = create_credential(
-                    database_engine=database_engine,
-                    account_name=account.name,
-                    realm_name=realm_name,
-                    region=region,
-                    role_name=role_name,
-                    session_name=session_name,
-                    intermediary_role_name=intermediary_role_name,
-                )
-
                 try:
-                    console_url = get_console_url(
-                        access_key_id=credential.access_key_id,
-                        secret_access_key=credential.secret_access_key,
-                        session_token=credential.session_token,
+                    _ = create_credential(
+                        database_engine=database_engine,
+                        account_name=account.name,
+                        realm_name=realm_name,
                         region=region,
-                        timeout=DEFAULT_TIMEOUT_IN_SECONDS,
+                        role_name=role_name,
+                        session_name=session_name,
+                        intermediary_role_name=intermediary_role_name,
                     )
-                except Exception as e:
-                    spinner.error("Could not generate console URL", submessage=str(e))
+                except RuntimeError as e:
+                    spinner.error(f"{e}")
                     raise RuntimeAppError() from e
 
-                encoded_console_url = urllib.parse.quote(console_url)
-                tab_color = "blue"
-
-                webbrowser.get(browser_name).open_new_tab(
-                    f"ext+container:name={account.name}&color={tab_color}&url={encoded_console_url}"
+                spinner.info(
+                    f"Authorized to {account.name} account as {role_name} role"
                 )
-
-                spinner.info(f"AWS console opened to {account.name}")
-
-            spinner.success("All done")

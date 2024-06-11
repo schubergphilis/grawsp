@@ -1,8 +1,9 @@
 [tool.poetry]
 name = "grawsp"
-version = "1.0.0"
+version = "1.1.0"
 description = "Grawsp is a command line application to manage credentials in AWS STS/SSO enabled landing zone."
 authors = ["Egon Braun <ebraun@schubergphilis.com>"]
+readme = "README.md"
 packages = [
     { include = "src/**/*.py" }
 ]
@@ -10,7 +11,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.10"
 boto3 = "^1.34.119"
-cement = {version="^3.0.10", extras=["alarm", "colorlog", "jinja2", "tabulate", "yaml"]}
+cement = {version="^3.0.10", extras=["colorlog", "tabulate"]}
 humanize = "^4.9.0"
 inflection = "^0.5.1"
 prompt-toolkit = "^3.0.46"
