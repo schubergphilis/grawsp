@@ -41,7 +41,7 @@ pipx install grawsp
 ... or using [Homebrew](https://brew.sh/):
 
 ```bash
-brew tap schubergphilis/core
+brew tap schubergphilis/tap
 brew install grawsp
 ```
 
