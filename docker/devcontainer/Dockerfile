@@ -1,4 +1,4 @@
-FROM mundoalem/devcontainer:latest
+FROM ghcr.io/schubergphilis/devcontainer:latest
 
 SHELL [ "/bin/bash", "-o", "pipefail", "-c" ]
 
