@@ -9,12 +9,7 @@ from .defaults import (
     DEFAULT_TIMEOUT_IN_SECONDS,
 )
 
-DEFAULT_CONFIG = init_defaults(
-    "aws",
-    "database",
-    "general",
-    "user",
-)
+DEFAULT_CONFIG = init_defaults("aws", "database", "general", "user", "screenshot")
 
 #
 # AWS
@@ -50,3 +45,11 @@ DEFAULT_CONFIG["general"]["timeout"] = DEFAULT_TIMEOUT_IN_SECONDS
 
 DEFAULT_CONFIG["user"]["email"] = ""
 DEFAULT_CONFIG["user"]["name"] = ""
+
+
+#
+# SCREENSHOT
+#
+DEFAULT_CONFIG["screenshot"]["resolution"] = "1920x1200"
+DEFAULT_CONFIG["screenshot"]["timeout"] = "5"
+DEFAULT_CONFIG["screenshot"]["sleep"] = 5

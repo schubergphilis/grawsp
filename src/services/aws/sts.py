@@ -56,6 +56,7 @@ def get_console_url(
     session_token: str,
     region: str = "",
     timeout: int = 10,
+    destination_url="https://console.aws.amazon.com/",
 ) -> str:
     session_data = {
         "sessionId": access_key_id,
@@ -75,7 +76,6 @@ def get_console_url(
     )
 
     signin_token = json.loads(response.text)
-    destination_url = "https://console.aws.amazon.com/"
 
     if region:
         destination_url = f"{destination_url}?region={region}#"
