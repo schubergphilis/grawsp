@@ -1,0 +1,50 @@
+version: "3"
+
+tasks:
+  build:
+    cmds:
+      - scripts/build.sh -p darwin/amd64
+      - scripts/build.sh -p darwin/arm64
+      - scripts/build.sh -p linux/amd64
+      - scripts/build.sh -p linux/arm64
+      - scripts/build.sh -p windows/amd64
+      - scripts/build.sh -p windows/arm64
+
+  clean:
+    cmds:
+      - rm -f coverage.txt
+      - rm -rf build/*
+      - rm -rf dist/*
+
+  lint:
+    cmds:
+      - go fmt "./cmd/..."
+      - go fmt "./internal/..."
+      - go fmt "./pkg/..."
+
+  lock:
+    cmds:
+      - go mod vendor
+      - go mod tidy
+
+  release:
+    cmds:
+      - scripts/build.sh -r -p darwin/amd64
+      - scripts/build.sh -r -p darwin/arm64
+      - scripts/build.sh -r -p linux/amd64
+      - scripts/build.sh -r -p linux/arm64
+      - scripts/build.sh -r -p windows/amd64
+      - scripts/build.sh -r -p windows/arm64
+
+  reset:
+    deps: [clean]
+    cmds:
+      - rm -rf vendor/*
+
+  scan:
+    cmds:
+      - gosec ./...
+
+  test:
+    cmds:
+      - go test -v -cover ./...
