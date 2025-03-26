@@ -13,7 +13,7 @@ export CMD_DIR="cmd"
 export DIST_DIR="dist"
 
 # Go
-export CGO_ENABLED=0
+export CGO_ENABLED=1
 
 # ######################################################################################################################
 # FUNCTIONS
@@ -55,12 +55,15 @@ _build() {
     BUILD_OS=$(echo $1 | cut -d/ -f1)
     BUILD_TIME=$(date --rfc-3339=seconds)
     BUILD_VERSION=$(_get_version)
-    BUILD_LDFLAGS="-X 'main.BuildTime=$BUILD_TIME' -X 'main.Commit=$BUILD_COMMIT' -X 'main.Version=$BUILD_VERSION'"
     BUILD_FILE="$BUILD_DIR/$BUILD_OS-$BUILD_ARCH/$PROGRAM_NAME"
+    BUILD_LDFLAGS=""
     BUILD_MODE=$2
 
     if [ "$RELEASE" == "yes" ]; then
         BUILD_LDFLAGS="$BUILD_LDFLAGS -w -s"
+        BUILD_LDFLAGS="$BUILD_LDFLAGS -X 'github.com/schubergphilis/grawsp/internal/meta.BuildTime=$BUILD_TIME'"
+        BUILD_LDFLAGS="$BUILD_LDFLAGS -X 'github.com/schubergphilis/grawsp/internal/meta.Commit=$BUILD_COMMIT'"
+        BUILD_LDFLAGS="$BUILD_LDFLAGS -X 'github.com/schubergphilis/grawsp/internal/meta.Version=$BUILD_VERSION'"
     fi
 
     echo "---------------------------------------------------------------------"
@@ -80,7 +83,7 @@ _build() {
 
     go build                             \
         -o "$BUILD_FILE"                 \
-        -mod=vendor                      \
+        -mod=mod                         \
         -ldflags="$BUILD_LDFLAGS"        \
         "$CMD_DIR/$PROGRAM_NAME/main.go"
 
@@ -110,33 +113,31 @@ _usage() {
 # MAIN
 # ######################################################################################################################
 
-if [ -d ".git" ]; then
-    BUILD_MODE="normal"
-    PLATFORM=""
-
-    while getopts "p:r" o; do
-        case "${o}" in
-            p)
-                PLATFORM=$OPTARG
-                ;;
-            r)
-                BUILD_MODE="release"
-                ;;
-            *)
-                _usage
-                ;;
-        esac
-    done
-
-    if [ "$PLATFORM" == "" ]; then
-        echo "ERROR: No platform selected."
-        exit 1
-    fi
-
-    _build $PLATFORM $BUILD_MODE
-
-else
+if [ ! -d ".git" ]; then
     echo "ERROR: Run this script from the root of the repository."
     exit 1
 fi
 
+BUILD_MODE="normal"
+PLATFORM=""
+
+while getopts "p:r" o; do
+    case "${o}" in
+        p)
+            PLATFORM=$OPTARG
+            ;;
+        r)
+            BUILD_MODE="release"
+            ;;
+        *)
+            _usage
+            ;;
+    esac
+done
+
+if [ "$PLATFORM" == "" ]; then
+    echo "ERROR: No platform selected."
+    exit 1
+fi
+
+_build $PLATFORM $BUILD_MODE
