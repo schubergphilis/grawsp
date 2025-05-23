@@ -1,9 +1,7 @@
 package command
 
 import (
-	"fmt"
-
-	log "github.com/sirupsen/logrus"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 )
 
@@ -18,17 +16,7 @@ such as accounts and organizations.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			orgName := args[0]
 
-			log.Debug("Loading list of accounts from cache")
-
-			accounts, err := GetAccountsFromCache(orgName)
-
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			for _, account := range accounts {
-				fmt.Println(account.ID, account.Name, account.Email)
-			}
+			log.Debug("Organization", "orgName", orgName)
 		},
 	}
 )

@@ -5,19 +5,20 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/log"
+	"github.com/schubergphilis/grawsp/internal/cacheservice"
 	"github.com/schubergphilis/grawsp/internal/meta"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.etcd.io/bbolt"
+)
+
+const (
+	SessionsBucket = "sessions"
 )
 
 var (
 	// Flags
 	configFile string
-
-	// Globals
-	cache *bbolt.DB
 
 	// Command
 	rootCmd = &cobra.Command{
@@ -30,17 +31,18 @@ their AWS accounts' credentials and resources.`,
 )
 
 func init() {
-	cobra.OnInitialize(onInitialize)
-	cobra.OnFinalize(onFinalize)
+	cobra.OnInitialize(Initialize)
+	cobra.OnFinalize(Finalize)
 
 	rootCmd.Flags().StringVar(&configFile, "config", "", "config file (default is $HOME/.grawsp.yml)")
 }
 
-func onFinalize() {
-	cache.Close()
+func Finalize() {
+	log.Debug("Finalizing...")
+	cacheservice.Finalize()
 }
 
-func onInitialize() {
+func Initialize() {
 	// Initialize configuration
 
 	if configFile != "" {
@@ -84,18 +86,18 @@ func onInitialize() {
 		log.SetLevel(log.ErrorLevel)
 	case "info":
 		log.SetLevel(log.InfoLevel)
-	case "trace":
-		log.SetLevel(log.TraceLevel)
 	case "warn":
 		log.SetLevel(log.WarnLevel)
 	default:
 		log.SetLevel(log.InfoLevel)
 	}
 
+	log.Debug("Initializing...")
+
 	// Inform if we were able to load the configuration file
 
 	if err == nil {
-		log.Debug("Configuration file found: ", viper.ConfigFileUsed())
+		log.Debug("Configuration file found", "file", viper.ConfigFileUsed())
 	} else {
 		log.Debug("Configuration file not found")
 	}
@@ -105,11 +107,9 @@ func onInitialize() {
 	cacheDir := viper.GetString("cache_dir")
 	cachePath := filepath.Join(cacheDir, "cache.db")
 
-	log.Debug("Cache location: ", cachePath)
+	log.Debug("Using cache", "file", cachePath)
 
-	cache, err = bbolt.Open(cachePath, 0640, nil)
-
-	if err != nil {
+	if err := cacheservice.Init(cachePath); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -59,7 +59,7 @@ _build() {
     BUILD_LDFLAGS=""
     BUILD_MODE=$2
 
-    if [ "$RELEASE" == "yes" ]; then
+    if [ "$BUILD_MODE" == "release" ]; then
         BUILD_LDFLAGS="$BUILD_LDFLAGS -w -s"
         BUILD_LDFLAGS="$BUILD_LDFLAGS -X 'github.com/schubergphilis/grawsp/internal/meta.BuildTime=$BUILD_TIME'"
         BUILD_LDFLAGS="$BUILD_LDFLAGS -X 'github.com/schubergphilis/grawsp/internal/meta.Commit=$BUILD_COMMIT'"
