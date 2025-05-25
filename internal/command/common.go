@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/schubergphilis/grawsp/internal/awsservice"
-	"github.com/schubergphilis/grawsp/internal/model"
 	"github.com/spf13/viper"
 )
 
@@ -15,27 +14,29 @@ func NewAwsOrgFromConfig(name string) (*awsservice.AwsOrg, error) {
 		return nil, fmt.Errorf("organization not found: %s", name)
 	}
 
-	org := &awsservice.AwsOrg{
-		Data: model.Org{
-			Name:  name,
-			Roles: make(map[string][]string),
-		},
-	}
-
 	regionKey := fmt.Sprintf("%s.region", orgKey)
+	region := ""
 
 	if viper.IsSet(regionKey) {
-		org.Data.Region = viper.GetString(regionKey)
+		region = viper.GetString(regionKey)
 	} else {
 		return nil, fmt.Errorf("region was not providedf for org %s", name)
 	}
 
 	startUrlKey := fmt.Sprintf("%s.start_url", orgKey)
+	startUrl := ""
 
 	if viper.IsSet(startUrlKey) {
-		org.Data.StartUrl = viper.GetString(startUrlKey)
+		startUrl = viper.GetString(startUrlKey)
 	} else {
 		return nil, fmt.Errorf("start_url was not providedf for org %s", name)
+	}
+
+	org := awsservice.NewAwsOrg(name, region, startUrl)
+	err := org.Init()
+
+	if err != nil {
+		return nil, err
 	}
 
 	rolesKey := fmt.Sprintf("%s.roles", orgKey)
@@ -51,8 +52,12 @@ func NewAwsOrgFromConfig(name string) (*awsservice.AwsOrg, error) {
 
 	if viper.IsSet(defaultRoleKey) {
 		org.Data.DefaultRole = viper.GetString(defaultRoleKey)
-	} else {
-		org.Data.DefaultRole = "default"
+	}
+
+	err = org.LoadFromCache()
+
+	if err != nil {
+		return nil, err
 	}
 
 	return org, nil

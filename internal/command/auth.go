@@ -1,13 +1,11 @@
 package command
 
 import (
-	"context"
 	"fmt"
 	"os"
 
 	"github.com/charmbracelet/log"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/spf13/cobra"
 )
 
@@ -29,12 +27,9 @@ specified region using a role.`,
 					log.Fatal(err)
 				}
 
-				log.Debug("Setting AWS Region", "region", org.Data.Region)
-
-				awsConfig, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(org.Data.Region))
-
-				if err != nil {
-					log.Fatal(err)
+				if org.Session.IsAccessTokenValid() {
+					fmt.Printf("Authenticated to %s\n", org.Data.Name)
+					continue
 				}
 
 				hostName, err := os.Hostname()
@@ -45,15 +40,10 @@ specified region using a role.`,
 
 				log.Debug("Acquired hostname", "hostname", hostName)
 
-				err = org.StartSession(awsConfig, hostName)
+				err = org.StartSession(hostName)
 
 				if err != nil {
 					log.Fatal(err)
-				}
-
-				if org.Session.IsAccessTokenValid() {
-					fmt.Printf("Authenticated to %s\n", org.Data.Name)
-					continue
 				}
 
 				fmt.Println("Verification URL: ", org.Session.Data.VerificationUrl)

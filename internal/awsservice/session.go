@@ -11,10 +11,26 @@ import (
 )
 
 type AwsSession struct {
-	Data model.Session
-
+	awsConfig     *aws.Config
+	Data          *model.Session
 	ssoClient     *sso.Client
 	ssooidcClient *ssooidc.Client
+}
+
+func NewAwsSession() *AwsSession {
+	session := &AwsSession{}
+	session.Data = &model.Session{
+		AccessToken:           "",
+		AccessTokenExpiresAt:  time.Time{},
+		ClientId:              "",
+		ClientSecret:          "",
+		ClientSecretExpiresAt: time.Time{},
+		DeviceCode:            "",
+		DeviceExpiresAt:       time.Time{},
+		VerificationUrl:       "",
+	}
+
+	return session
 }
 
 func (s *AwsSession) Authenticate(clientName, startUrl string) error {
@@ -75,11 +91,9 @@ func (s *AwsSession) CreateAccessToken() error {
 	return nil
 }
 
-func (s *AwsSession) Init(awsConfig aws.Config) error {
+func (s *AwsSession) Init(awsConfig aws.Config) {
 	s.ssoClient = sso.NewFromConfig(awsConfig)
 	s.ssooidcClient = ssooidc.NewFromConfig(awsConfig)
-
-	return nil
 }
 
 func (s *AwsSession) IsAccessTokenValid() bool {
@@ -104,38 +118,6 @@ func (s *AwsSession) isDeviceAuthorized() bool {
 	}
 
 	return false
-}
-
-func (s *AwsSession) ListAccounts() ([]*Account, error) {
-	var nextToken *string
-	var accounts []*Account
-
-	for {
-		page, err := s.ssoClient.ListAccounts(context.TODO(), &sso.ListAccountsInput{
-			AccessToken: aws.String(s.Data.AccessToken),
-			NextToken:   nextToken,
-		})
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, account := range page.AccountList {
-			accounts = append(accounts, &Account{
-				Email: *account.EmailAddress,
-				ID:    *account.AccountId,
-				Name:  *account.AccountName,
-			})
-		}
-
-		nextToken = page.NextToken
-
-		if page.NextToken == nil {
-			break
-		}
-	}
-
-	return accounts, nil
 }
 
 func (s *AwsSession) registerClient(name string) error {
