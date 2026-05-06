@@ -18,12 +18,12 @@ jobs:
       - name: Prepare
         uses: schubergphilis/prepare-action@v1
         with:
-          type: python
+          type: go
           job: lint
 
       - name: Lint
         run: |
-          make lint
+          task lint
 
   scan:
     name: Scan
@@ -36,12 +36,12 @@ jobs:
       - name: Prepare
         uses: schubergphilis/prepare-action@v1
         with:
-          type: python
+          type: go
           job: scan
 
       - name: Scan
         run: |
-          make scan
+          task scan
 
   ci:
     name: CI
@@ -54,12 +54,12 @@ jobs:
       - name: Prepare
         uses: schubergphilis/prepare-action@v1
         with:
-          type: python
+          type: go
           job: ci
 
       - name: Test
         run: |
-          make test
+          task test
 
   cd:
     name: CD
@@ -69,9 +69,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    env:
-      PYPI_UPLOAD_USERNAME: ${{ secrets.PYPI_UPLOAD_USERNAME }}
-      PYPI_UPLOAD_PASSWORD: ${{ secrets.PYPI_UPLOAD_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,13 +76,9 @@ jobs:
       - name: Prepare
         uses: schubergphilis/prepare-action@v1
         with:
-          type: python
+          type: go
           job: cd
-
-      - name: Build
-        run: |
-          make build
 
       - name: Release
         run: |
-          make release
+          task release
