@@ -50,6 +50,7 @@ _get_version() {
 }
 
 _build() {
+    BUILD_GOLANG_VERSION=$(go version | cut -d " " -f 3 | cut -c3-)
     BUILD_ARCH=$(echo $1 | cut -d/ -f2)
     BUILD_COMMIT=$(_get_commit)
     BUILD_OS=$(echo $1 | cut -d/ -f1)
@@ -69,6 +70,7 @@ _build() {
     echo "---------------------------------------------------------------------"
     echo "Building $PROGRAM_NAME for..."
     echo "---------------------------------------------------------------------"
+    echo "Go:         $BUILD_GOLANG_VERSION"
     echo "Arch:       $BUILD_ARCH"
     echo "OS:         $BUILD_OS"
     echo "Timestamp:  $BUILD_TIME"
@@ -83,6 +85,7 @@ _build() {
 
     go build                             \
         -o "$BUILD_FILE"                 \
+        -race                            \
         -mod=mod                         \
         -ldflags="$BUILD_LDFLAGS"        \
         "$CMD_DIR/$PROGRAM_NAME/main.go"
