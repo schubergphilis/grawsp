@@ -12,10 +12,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-const (
-	SessionsBucket = "sessions"
-)
-
 var (
 	// Flags
 	configFile string

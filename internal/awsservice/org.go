@@ -15,7 +15,8 @@ import (
 )
 
 type AwsOrg struct {
-	Accounts  []*model.Account
+	Accounts  *AwsAccountCollection
+	awsConfig aws.Config
 	Data      *model.Org
 	Session   *AwsSession
 	ssoClient *sso.Client
@@ -23,13 +24,13 @@ type AwsOrg struct {
 
 func NewAwsOrg(name, region, startUrl string) *AwsOrg {
 	org := &AwsOrg{}
-	org.Accounts = make([]*model.Account, 0)
+	org.Accounts = &AwsAccountCollection{}
 	org.Session = NewAwsSession()
 	org.Data = &model.Org{
 		DefaultRole: "default",
 		Name:        name,
 		Region:      region,
-		Roles:       make(map[string][]string),
+		Roles:       make(map[string]string),
 		StartUrl:    startUrl,
 	}
 
@@ -43,32 +44,30 @@ func (o *AwsOrg) Init() error {
 		return err
 	}
 
+	o.awsConfig = awsConfig
 	o.ssoClient = sso.NewFromConfig(awsConfig)
 
-	o.Session.Init(awsConfig)
-	return nil
+	err = o.Session.Init(awsConfig)
+
+	if err != nil {
+		return err
+	}
+
+	err = o.Accounts.Init(awsConfig)
+
+	return err
 }
 
 func (o *AwsOrg) LoadFromCache() error {
-	sessionData, err := cacheservice.GetSession(o.Data.Name)
+	err := o.Session.LoadFromCache(o.Data.Name)
 
 	if err != nil {
 		return err
 	}
 
-	if sessionData != nil {
-		o.Session.Data = sessionData
-	}
+	err = o.Accounts.LoadFromCache(o.Data.Name)
 
-	accounts, err := cacheservice.GetAccounts(o.Data.Name)
-
-	if err != nil {
-		return err
-	}
-
-	o.Accounts = accounts
-
-	return nil
+	return err
 }
 
 func (o *AwsOrg) StartSession(clientName string) error {
@@ -87,40 +86,50 @@ func (o *AwsOrg) StartSession(clientName string) error {
 	return err
 }
 
-func (o *AwsOrg) SyncAccounts() error {
-	var nextToken *string
-	var accounts []*model.Account
+func (o *AwsOrg) SaveToCache() error {
+	err := o.Accounts.SaveToCache(o.Data.Name)
 
-	for {
-		page, err := o.ssoClient.ListAccounts(context.TODO(), &sso.ListAccountsInput{
-			AccessToken: aws.String(o.Session.Data.AccessToken),
-			NextToken:   nextToken,
-		})
+	if err != nil {
+		return err
+	}
+
+	err = o.Session.SaveToCache(o.Data.Name)
+
+	return err
+}
+
+func (o *AwsOrg) SyncAccounts() error {
+	o.Accounts.Clear()
+
+	paginator := sso.NewListAccountsPaginator(o.ssoClient, &sso.ListAccountsInput{
+		AccessToken: aws.String(o.Session.Data.AccessToken),
+	})
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(context.TODO())
 
 		if err != nil {
 			return err
 		}
 
 		for _, account := range page.AccountList {
-			accounts = append(accounts, &model.Account{
-				Email: *account.EmailAddress,
-				ID:    *account.AccountId,
-				Name:  *account.AccountName,
-			})
-		}
+			awsAccount := NewAwsAccount(
+				*account.AccountId,
+				*account.AccountName,
+				*account.EmailAddress,
+			)
 
-		nextToken = page.NextToken
+			err = awsAccount.Init(o.awsConfig)
 
-		if page.NextToken == nil {
-			break
+			if err != nil {
+				return err
+			}
+
+			o.Accounts.Append(awsAccount)
 		}
 	}
 
-	o.Accounts = accounts
-
-	err := cacheservice.PutAccounts(o.Data.Name, accounts)
-
-	return err
+	return nil
 }
 
 func (o *AwsOrg) WaitForVerification(timeout int) error {

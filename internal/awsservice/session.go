@@ -7,11 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sso"
 	"github.com/aws/aws-sdk-go-v2/service/ssooidc"
+	"github.com/schubergphilis/grawsp/internal/cacheservice"
+	"github.com/schubergphilis/grawsp/internal/errors"
 	"github.com/schubergphilis/grawsp/internal/model"
 )
 
 type AwsSession struct {
-	awsConfig     *aws.Config
 	Data          *model.Session
 	ssoClient     *sso.Client
 	ssooidcClient *ssooidc.Client
@@ -91,9 +92,11 @@ func (s *AwsSession) CreateAccessToken() error {
 	return nil
 }
 
-func (s *AwsSession) Init(awsConfig aws.Config) {
+func (s *AwsSession) Init(awsConfig aws.Config) error {
 	s.ssoClient = sso.NewFromConfig(awsConfig)
 	s.ssooidcClient = ssooidc.NewFromConfig(awsConfig)
+
+	return nil
 }
 
 func (s *AwsSession) IsAccessTokenValid() bool {
@@ -120,6 +123,24 @@ func (s *AwsSession) isDeviceAuthorized() bool {
 	return false
 }
 
+func (s *AwsSession) LoadFromCache(orgName string) error {
+	sessionData, err := cacheservice.GetSession(orgName)
+
+	if err != nil {
+		if _, ok := err.(*errors.CacheMissError); ok {
+			return nil
+		} else {
+			return err
+		}
+	}
+
+	if sessionData != nil {
+		s.Data = sessionData
+	}
+
+	return nil
+}
+
 func (s *AwsSession) registerClient(name string) error {
 	registration, err := s.ssooidcClient.RegisterClient(
 		context.TODO(),
@@ -138,4 +159,9 @@ func (s *AwsSession) registerClient(name string) error {
 	s.Data.ClientSecretExpiresAt = time.Unix(registration.ClientSecretExpiresAt, 0)
 
 	return nil
+}
+
+func (s *AwsSession) SaveToCache(orgName string) error {
+	err := cacheservice.PutSession(orgName, s.Data)
+	return err
 }

@@ -33,18 +33,13 @@ func NewAwsOrgFromConfig(name string) (*awsservice.AwsOrg, error) {
 	}
 
 	org := awsservice.NewAwsOrg(name, region, startUrl)
-	err := org.Init()
-
-	if err != nil {
-		return nil, err
-	}
 
 	rolesKey := fmt.Sprintf("%s.roles", orgKey)
 
 	if viper.IsSet(rolesKey) {
 		for role := range viper.GetStringMap(rolesKey) {
 			roleKey := fmt.Sprintf("%s.%s", rolesKey, role)
-			org.Data.Roles[role] = viper.GetStringSlice(roleKey)
+			org.Data.Roles[role] = viper.GetString(roleKey)
 		}
 	}
 
@@ -54,11 +49,17 @@ func NewAwsOrgFromConfig(name string) (*awsservice.AwsOrg, error) {
 		org.Data.DefaultRole = viper.GetString(defaultRoleKey)
 	}
 
-	err = org.LoadFromCache()
+	return org, nil
+}
 
-	if err != nil {
-		return nil, err
+func GetDefaultOrgName() (string, error) {
+	defaultOrgKey := "default_org"
+
+	if !viper.IsSet(defaultOrgKey) {
+		return "", fmt.Errorf("%s not set", defaultOrgKey)
 	}
 
-	return org, nil
+	defaultOrg := viper.GetString(defaultOrgKey)
+
+	return defaultOrg, nil
 }

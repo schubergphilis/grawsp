@@ -12,51 +12,88 @@ import (
 var (
 	// Command
 	authCmd = &cobra.Command{
-		Use:   "auth [org...]",
+		Use:   "auth [org]",
 		Short: "Authenticate to AWS",
 		Long: `Establish an authenticated session with an AWS organization in a
 specified region using a role.`,
-		Args: cobra.MinimumNArgs(1),
+		Args: cobra.ArbitraryArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			for _, orgName := range args {
-				log.Debug("Loading org", "name", orgName)
+			var err error
+			nargs := len(args)
+			orgName := ""
 
-				org, err := NewAwsOrgFromConfig(orgName)
-
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				if org.Session.IsAccessTokenValid() {
-					fmt.Printf("Authenticated to %s\n", org.Data.Name)
-					continue
-				}
-
-				hostName, err := os.Hostname()
+			switch nargs {
+			case 0:
+				orgName, err = GetDefaultOrgName()
 
 				if err != nil {
 					log.Fatal(err)
 				}
-
-				log.Debug("Acquired hostname", "hostname", hostName)
-
-				err = org.StartSession(hostName)
-
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				fmt.Println("Verification URL: ", org.Session.Data.VerificationUrl)
-				fmt.Println("Waiting for verification...")
-
-				err = org.WaitForVerification(60.0)
-
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				fmt.Printf("Authenticated to %s\n", org.Data.Name)
+			default:
+				orgName = args[0]
 			}
+
+			log.Debug("Loading org", "name", orgName)
+
+			org, err := NewAwsOrgFromConfig(orgName)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			log.Debug("Loading cache")
+
+			err = org.LoadFromCache()
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			if org.Session.IsAccessTokenValid() {
+				fmt.Printf("authenticated to %s\n", org.Data.Name)
+				return
+			}
+
+			log.Debug("Initializing org", "org", orgName)
+
+			err = org.Init()
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			hostName, err := os.Hostname()
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			log.Info("Acquired hostname", "hostname", hostName)
+
+			err = org.StartSession(hostName)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			fmt.Println("verification url: ", org.Session.Data.VerificationUrl)
+			fmt.Println("waiting for verification...")
+
+			err = org.WaitForVerification(60)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			log.Debug("Saving session to cache", "org", orgName)
+
+			err = org.Session.SaveToCache(orgName)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			fmt.Printf("authenticated to %s\n", org.Data.Name)
 		},
 	}
 )
