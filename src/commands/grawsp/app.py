@@ -10,6 +10,7 @@ from .controllers.base import BaseController
 from .controllers.export import ExportController
 from .controllers.list import ListController
 from .controllers.open_console import OpenConsoleController
+from .controllers.screenshot import ScreenShotController
 from .controllers.sync import SyncController
 from .exceptions import AppError
 from .hooks import database_hook
@@ -42,6 +43,7 @@ class GrawspApp(App):
             ExportController,
             ListController,
             OpenConsoleController,
+            ScreenShotController,
             SyncController,
         ]
 
